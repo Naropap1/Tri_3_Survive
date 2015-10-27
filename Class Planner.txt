@@ -1,0 +1,24 @@
+
+GameMain
+	Array Player
+	Array Bullet
+	updateAll()
+
+Player
+	X, Y positions
+	vector (0 - 360) facing
+	boolean canShoot
+	SPEED_CONSTANT
+	move()
+	shoot()
+	delete()- if overlaps with bullet
+
+
+Bullet
+	X, Y position
+	vector (0-360)
+	SPEED_CONSTANT
+	update()
+	delete() - (when X,Y is on edge of map) OR (hit player)
+
+
