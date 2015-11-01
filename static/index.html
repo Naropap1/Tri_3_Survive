@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+	<head>
+		<link href="style.css" type="text/css" rel="stylesheet" />
+		<title>Tri 3 Survive</title>
+	</head>
+	
+	<body>
+		
+		<div id="chat-box">
+			<ul id="messages"></ul>
+			<form action="">
+				<textarea id="text-box"  placeholder="Send message"></textarea>
+			</form>
+		</div>
+		
+		<div id="game-window">
+		
+		</div>
+		
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		
+		<script>
+			var socket = io();
+			
+			//script that allows user to press enter to submit textarea text
+			//also allows shift+enter for new line
+			$('textarea').keydown(function(event) {
+				if (event.keyCode == 13 && !event.shiftKey) {
+					var text = $('#text-box').val();
+					
+					if(text) //checks for empty text
+					{
+						$('form').submit();
+						$('#text-box').val('');
+					}
+					return false;
+				}
+			});
+			
+			$('form').submit(function() {
+				socket.emit('chat-message', $('#text-box').val());
+				
+				return false;
+			});
+			
+			socket.on('chat-message', function(msg) {
+				$('#messages').append($('<li>').text(msg));
+				
+				//keeps chat scrolled to bottom of chat area
+				var objDiv = document.getElementById("chat-box");
+				objDiv.scrollTop = objDiv.scrollHeight;
+			});
+		</script>
+	</body>
+</html>
