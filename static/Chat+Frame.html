@@ -1,0 +1,69 @@
+<div id="menu">
+	<label id="score">Score</label>
+	<button id="get-profile-button" class="small-button">Profile</button>
+	<button id="log-out-button" class="small-button">Log Out</button>
+</div>
+
+
+<div id="chat-box">
+	<ul id="messages"></ul>
+	<form action="">
+		<textarea id="text-box"  placeholder="Send message"></textarea>
+	</form>
+</div>
+
+<div id="content-window">
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+	var socket = io();
+	
+	//script that allows user to press enter to submit textarea text
+	//also allows shift+enter for new line
+	$('textarea').keydown(function(event) {
+		if (event.keyCode == 13 && !event.shiftKey) {
+			var text = $('#text-box').val();
+			
+			if(text) //checks for empty text
+			{
+				$('form').submit();
+				$('#text-box').val('');
+			}
+			return false;
+		}
+		
+		else if(event.keyCode == 13 && event.shiftKey) {
+			var text = $("#text-box").val();
+			text= text + "<br> ";
+			console.log(text);
+		}
+	});
+	
+	$('form').submit(function() {
+		var message = {source: localStorage['username'],
+						text: $('#text-box').val()};
+		socket.emit('chat-message', message);
+		
+		return false;
+	});
+	
+	socket.on('chat-message', function(msg) {
+		$('#messages').append('<li><b>' + msg.source + ':</b> ' + msg.text + '</li>');
+		
+		//keeps chat scrolled to bottom of chat area
+		var objDiv = document.getElementById("chat-box");
+		objDiv.scrollTop = objDiv.scrollHeight;
+	});
+	
+	$("#log-out-button").click(function() {
+		localStorage.username = "";
+		$("#content").load("LogInPage.html");
+		socket.close();
+	});
+	
+	$("#get-profile-button").click(function() {
+		setUpProfile();
+	});
+</script>

@@ -1,0 +1,87 @@
+<h1> Tri 3 Survive </h1>
+<div id="form">
+	<input id="username-input" type="text" size="30" placeholder="Username">
+	<input id="password-input" type="password" size="30" placeholder="Password">
+	</br>
+	<button id="log-in-button" class="large-button">Log In</button>
+	<button id="create-account-button" class="large-button">New Account</button>
+	<p id="status"></p>
+</div>
+
+<script>
+	$(document).ready(function() {
+		//allows clicking enter to simulate clicking "Log In"
+		$("input").keydown(function(event) {
+			if(event.keyCode == 13) {
+				$("#log-in-button").click();
+			}
+		});
+	
+		$("#log-in-button").click(function() {
+		
+			var nameInput = $("#username-input").val();
+			var passInput = $("#password-input").val();
+			
+			//make sure fields have values
+			if(nameInput && passInput) {
+				$.ajax({
+					url: "users/" + nameInput,
+					type: "GET",
+					dataType: "json",
+					
+					success: function(data) {
+						
+						if(!data.username) {
+							$("#status").html('Username not found. Click "New Account" if this is your first time');
+						}
+						else if(data.password != passInput) {
+							$("#status").html("invalid username and password");
+						}
+						else {
+							$("#status").html("Logged in");
+							setUpFrame(data); //function defined in index.html
+						}
+					}
+				})
+			}
+			
+			else {
+				$("#status").html("Please enter a username and password");
+			}
+		});
+		
+		$("#create-account-button").click(function() {
+			
+			//make sure fields have values
+			if($("#username-input").val() && $("#password-input").val()) {
+				$.ajax({
+					url: "users/",
+					type: "POST",
+					dataType: "json",
+					
+					data: { 
+						username: $("#username-input").val(),
+						password: $("#password-input").val()
+					},
+					
+					success: function(data) {
+						if(data.status == 'success') {
+							$("#status").html("Created new User");
+							setUpFrame(data); //function defined in index.html
+						}
+						else if(data.status == 'invalid') {
+							$("#status").html("Username taken");
+						}
+						else {
+							$("#status").html("Error in user creation");
+						}
+					}
+				})
+			}
+			
+			else {
+				$("#status").html("Please enter a username and password");
+			}
+		});
+	});
+</script>

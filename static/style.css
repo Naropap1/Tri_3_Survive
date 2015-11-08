@@ -1,11 +1,18 @@
+body {
+	margin: 0px;
+}
+
+#content-window {
+	margin-right: 300px;
+}
+
 #chat-box {
-	border-left-style: solid;
-	border-width: 1px;
-	
-	top: 0px;
+	border-left: solid 1px #808080;
+	top: 56px;
     left: 1;
     right: 0;
     bottom: 0;
+	
 	width: 300px;
     position: fixed;
 	
@@ -24,6 +31,32 @@
 	bottom: 0;
 }
 
+#score {
+	width: 60%;
+	padding-top: 15px;
+	margin: 0px auto;
+	display: inline-block;
+	text-align: center;
+	transform: translate(-40%,0%);
+	font-size: 24px;
+	font-style: bold;
+	font-family: sans-serif;
+	color: #808080;
+}
+
+h2 {
+	display: inline-block;
+	margin: 0px;
+}
+
+#menu {
+	padding-right: 5px;
+	padding-bottom: 5px;
+	height: 51px;
+	border-bottom: solid 1px #808080;
+	text-align: right;
+}
+
 ul {
 	list-style-type: none;
 	padding: 10px 10px 60px 10px;
@@ -31,4 +64,73 @@ ul {
 
 li {
 	padding-bottom: 20px;
+	font-size: 18px;
+}
+
+h1 {
+	margin: auto;
+	width: 750px;
+	padding-top: 70px;
+	padding-bottom: 70px;
+	font-size: 112px;
+	color: #808080;
+}
+
+button {
+	display: inline-block;
+	font-family: sans-serif;
+	line-height: 1.8;
+	appearance: none;
+	box-shadow: none;
+	border-radius: 0;
+  
+	color: #808080;
+	background: rgba(0,0,0,0);
+}
+
+.large-button {
+	margin: 10px;
+	padding: 15px 45px;
+	font-size: 48px;
+	border: solid 5px #808080;
+}
+
+.small-button {
+	margin: 5px;
+	padding: 5px 10px;
+	font-size: 16px;
+	border:  solid 3px #808080;
+	transform: translate(0%, -8%);
+}
+
+button:hover {
+	border-color: #696969;
+	color: #696969;
+}
+
+button:active {
+	border-color: #000000;
+	color: #000000;
+}
+
+button:focus {
+  outline: none
+}
+
+#form {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-40%, -40%);
+}
+
+input {
+	margin: 10px;
+	height: 48px;
+	font-size: 36px;
+	font-family: sans-serif;
+	color: #808080;
+	padding: 6px;
+	border: solid 5px #808080;
+	outline: none;
 }
