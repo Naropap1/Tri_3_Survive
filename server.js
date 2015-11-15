@@ -24,27 +24,38 @@ io.on('connection', function(socket) {
 
 //handling ajax calls
 
-//log in - returns row for user and checks password on client end
-app.get('/users/*', function(req, res) {
+//log in - checks that user exists and password is correct
+//first argument is username, second is password
+app.get('/users/*/*', function(req, res) {
 	var response;
 	db.serialize(function() {
 	db.all("SELECT * FROM users WHERE username = ?", req.params[0], function(err, rows) {
+		//error in database
 		if(err)	{
-			console.log("db error in get users");
-			console.log(err);
-			response = {};
+			//console.log("db error in get users");
+			//console.log(err);
+			response = {status: "database"};
 			res.send(response);
 			return;
 		}
 		else {
+			//if username not found (i.e. user doesn't exist)
 			if(rows.length == 0) {
-				response = {username: ""};
+				response = {status: "username"};
 				res.send(response);
 				return;
 			}
 			
-			response = {username: rows[0].username, 
-						password: rows[0].password,
+			//incorrect password
+			if(rows[0].password != req.params[1]) {
+				response = {status: "password"};
+				res.send(response);
+				return;
+			}
+			
+			//successful login
+			response = {status: "success",
+						username: rows[0].username,
 						highscore: rows[0].highscore,
 						kills: rows[0].totalkills,
 						deaths: rows[0].totaldeaths};
@@ -53,7 +64,36 @@ app.get('/users/*', function(req, res) {
 		}
 	});
 	});
-	//res.send(response);
+	
+	return;
+});
+
+//get profile statistics after logged in
+app.get('/users/*', function(req, res) {
+	var response;
+	
+	db.serialize(function() {
+	db.all("SELECT * FROM users WHERE username = ?", req.params[0], function(err, rows) {
+		//error in database
+		if(err)	{
+			//console.log("db error in get users");
+			//console.log(err);
+			response = {status: "database"};
+			res.send(response);
+			return;
+		}
+		else {
+
+			response = {highscore: rows[0].highscore,
+						kills: rows[0].totalkills,
+						deaths: rows[0].totaldeaths};
+						
+			res.send(response);
+			return;
+		}
+	});
+	});
+	
 	return;
 });
 
@@ -68,7 +108,7 @@ app.post('/users', function(req, res) {
 	db.serialize(function() {
 	db.run("INSERT INTO users (username, password, highscore, totalkills, totaldeaths) VALUES (?, ?, ?, ?, ?)", [name, pass, 0, 0, 0] , function(err) {
 		if(err) {
-			console.log(err);
+			//console.log(err);
 			response = {status: "invalid"};
 			res.send(response);
 			return;
@@ -87,6 +127,30 @@ app.post('/users', function(req, res) {
 	});
 });
 
+//Deletes user account
+app.delete('/users/*', function(req, res) {
+	var response;
+	var user = req.params[0];
+	
+	db.serialize(function() {
+	db.run("DELETE FROM users WHERE username = ?", user, function(err) {
+		if(err) {
+			console.log(err);
+			response = {status: "fail"};
+			res.send(response);
+			return;
+		}
+		else {
+			response = {status: "success"};
+			res.send(response);
+			return;
+		}
+	});
+	});
+	
+});
+
+//start server
 http.listen(3333, function(){
   console.log('listening on *:3333');
 });

@@ -18,6 +18,11 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
+	//go to profile first on loading page
+	$(document).ready(function() {
+		setUpProfile();
+	});
+
 	var socket = io();
 	
 	//script that allows user to press enter to submit textarea text
@@ -41,6 +46,7 @@
 		}
 	});
 	
+	//emits chat message along with user who sent it
 	$('form').submit(function() {
 		var message = {source: localStorage['username'],
 						text: $('#text-box').val()};
@@ -50,6 +56,7 @@
 	});
 	
 	socket.on('chat-message', function(msg) {
+		//displays chat message as User: message
 		$('#messages').append('<li><b>' + msg.source + ':</b> ' + msg.text + '</li>');
 		
 		//keeps chat scrolled to bottom of chat area
@@ -57,6 +64,7 @@
 		objDiv.scrollTop = objDiv.scrollHeight;
 	});
 	
+	//two menu buttons on top of page
 	$("#log-out-button").click(function() {
 		localStorage.username = "";
 		$("#content").load("LogInPage.html");
@@ -66,4 +74,21 @@
 	$("#get-profile-button").click(function() {
 		setUpProfile();
 	});
+	
+	//grabs profile stats and displays them as a "profile" page (see Profile.html")
+	function setUpProfile() {
+		$.ajax({
+			url: "users/" + localStorage.username,
+			type: "GET",
+			dataType: "json",
+			
+			success: function(data) {
+				localStorage['highscore'] = data.highscore;
+				localStorage['totalkills'] = data.kills;
+				localStorage['totaldeaths'] = data.deaths;
+			}
+		});
+		
+		$("#content-window").load("Profile.html");
+	}
 </script>

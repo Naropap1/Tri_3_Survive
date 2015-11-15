@@ -25,21 +25,25 @@
 			//make sure fields have values
 			if(nameInput && passInput) {
 				$.ajax({
-					url: "users/" + nameInput,
+					url: "users/" + nameInput + "/" + passInput,
 					type: "GET",
 					dataType: "json",
 					
 					success: function(data) {
 						
-						if(!data.username) {
+						if(data.status == "database") {
+							$("#status").html("Internal error, please try again later");
+						}
+						else if(data.status == "username") {
 							$("#status").html('Username not found. Click "New Account" if this is your first time');
 						}
-						else if(data.password != passInput) {
-							$("#status").html("invalid username and password");
+						else if(data.status == "password") {
+							$("#status").html("Invalid password");
 						}
-						else {
+						else if(data.status == "success") {
 							$("#status").html("Logged in");
-							setUpFrame(data); //function defined in index.html
+							localStorage.username = data.username;
+							setUpFrame(); //function defined in index.html
 						}
 					}
 				})
@@ -67,7 +71,8 @@
 					success: function(data) {
 						if(data.status == 'success') {
 							$("#status").html("Created new User");
-							setUpFrame(data); //function defined in index.html
+							localStorage.username = data.username;
+							setUpFrame(); //function defined in index.html
 						}
 						else if(data.status == 'invalid') {
 							$("#status").html("Username taken");

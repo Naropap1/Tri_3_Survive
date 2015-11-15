@@ -15,7 +15,6 @@
 	<script>
 		$(document).ready(function() {
 			var username = localStorage.username;
-			console.log(username);
 			
 			if(!username) {
 				$("#content").load("LogInPage.html");
@@ -25,20 +24,8 @@
 			}
 		});
 		
-		function setUpFrame(data) {
-			localStorage['username'] = data.username;
-			localStorage['highscore'] = data.highscore;
-			localStorage['totalkills'] = data.kills;
-			localStorage['totaldeaths'] = data.deaths;
+		function setUpFrame() {
 			$("#content").load("Chat+Frame.html");
-			$("#content-window").ready(function() { //try putting script in chat+frame
-				console.log("callsetup");
-				setUpProfile();
-			});
-		}
-		
-		function setUpProfile() {
-			$("#content-window").load("Profile.html");
 		}
 	</script>
 </html>

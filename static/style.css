@@ -2,10 +2,37 @@ body {
 	margin: 0px;
 }
 
+/* Game/Profile Window stuff */
 #content-window {
 	margin-right: 300px;
+	padding: 10px;
+	text-align: center;
+	font-family: sans-serif;
+	color: #808080;
 }
 
+h1 {
+	margin: auto;
+	width: 750px;
+	padding-top: 70px;
+	padding-bottom: 70px;
+	font-size: 112px;
+	color: #808080;
+}
+
+#profile-name {
+	text-align: center;
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+h2 {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* Chat window stuff */
 #chat-box {
 	border-left: solid 1px #808080;
 	top: 56px;
@@ -31,32 +58,6 @@ body {
 	bottom: 0;
 }
 
-#score {
-	width: 60%;
-	padding-top: 15px;
-	margin: 0px auto;
-	display: inline-block;
-	text-align: center;
-	transform: translate(-40%,0%);
-	font-size: 24px;
-	font-style: bold;
-	font-family: sans-serif;
-	color: #808080;
-}
-
-h2 {
-	display: inline-block;
-	margin: 0px;
-}
-
-#menu {
-	padding-right: 5px;
-	padding-bottom: 5px;
-	height: 51px;
-	border-bottom: solid 1px #808080;
-	text-align: right;
-}
-
 ul {
 	list-style-type: none;
 	padding: 10px 10px 60px 10px;
@@ -67,15 +68,29 @@ li {
 	font-size: 18px;
 }
 
-h1 {
-	margin: auto;
-	width: 750px;
-	padding-top: 70px;
-	padding-bottom: 70px;
-	font-size: 112px;
+/* Header bar stuff */
+#score {
+	width: 60%;
+	padding-top: 15px;
+	margin: 0px auto;
+	display: inline-block;
+	text-align: center;
+	transform: translate(-31%,0%);
+	font-size: 24px;
+	font-style: bold;
+	font-family: sans-serif;
 	color: #808080;
 }
 
+#menu {
+	padding-right: 5px;
+	padding-bottom: 5px;
+	height: 51px;
+	border-bottom: solid 1px #808080;
+	text-align: right;
+}
+
+/* Button stuff */
 button {
 	display: inline-block;
 	font-family: sans-serif;
@@ -103,6 +118,14 @@ button {
 	transform: translate(0%, -8%);
 }
 
+.profile-button {
+	margin: 20px;
+}
+
+#play-button {
+	margin-top: 70px;
+}
+
 button:hover {
 	border-color: #696969;
 	color: #696969;
@@ -117,6 +140,7 @@ button:focus {
   outline: none
 }
 
+/* Login form */
 #form {
 	position: absolute;
 	top: 50%;

@@ -1,6 +1,44 @@
-<h1 id="profile-name">Profile Name</h1>
+<h1 id="profile-name"></h1>
+<h2 id="highscore"></h2>
+<h2 id="kills"></h2>
+<h2 id="deaths"></h2>
+
+<button id="play-button" class="large-button profile-button">Play Game!</button>
+<br>
+<button id="delete-profile" class="small-button profile-button">Delete Account</button>
 
 <script>
-	console.log("Profile data");
 	$("#profile-name").html(localStorage.username);
+	$("#highscore").html("Record Score: " + localStorage.highscore);
+	$("#kills").html("Total kills: " + localStorage.totalkills);
+	$("#deaths").html("Total Deaths: " + localStorage.totaldeaths);
+	
+	$(document).ready(function() {
+		$("#play-button").click(function() {
+			//////////////////////////////////////////////////////////////
+			//     Add game when pressed here
+			//////////////////////////////////////////////////////////////
+			$("#content-window").html(" ");
+		});
+		
+		$("#delete-profile").click(function() {
+			$.ajax({
+				url: "users/" + localStorage.username,
+				type: "DELETE",
+				dataType: "json",
+				
+				success: function(data) {
+					console.log(data);
+					if(data.status == 'success') {
+						localStorage.clear();
+						$("#content").load("LogInPage.html");
+					}
+					else {
+						console.log("DELETE data");
+						console.log(data);
+					}
+				}
+			});
+		});
+	});
 </script>
