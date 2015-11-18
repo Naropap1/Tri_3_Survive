@@ -151,6 +151,6 @@ app.delete('/users/*', function(req, res) {
 });
 
 //start server
-http.listen(3333, function(){
+http.listen(8080, '127.0.0.1', function(){
   console.log('listening on *:3333');
 });
