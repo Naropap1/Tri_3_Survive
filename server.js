@@ -151,7 +151,7 @@ app.delete('/users/*', function(req, res) {
 });
 
 //start server
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8000;
 var server_ip = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 
 http.listen(server_port, server_ip, function(){
