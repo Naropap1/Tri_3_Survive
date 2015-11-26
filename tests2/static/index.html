@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+	<script src="/socket.io/socket.io.js"></script>
+	<script src=""></script>
+	<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+	<script src="http://code.createjs.com/easeljs-0.5.0.min.js"></script>	
+	<head>
+		<link href="style.css" type="text/css" rel="stylesheet" />
+		<title>Tri 3 Survive</title>
+	</head>
+	
+	<body>
+		
+		<div id="chat-box">
+			<ul id="messages"></ul>
+			<form action="">
+				<textarea id="text-box"  placeholder="Send message"></textarea>
+			</form>
+		</div>
+		
+		<div id="game-window">
+			<canvas width= document.documentElement.clientWidth height="10"></canvas>
+			<script>
+			  var canvas = document.querySelector("canvas");
+			  canvas.width = document.documentElement.clientWidth - document.getElementById("chat-box").offsetWidth - 29;
+			  canvas.height = document.documentElement.clientHeight - 15;
+			  var myScale = 15;
+			  var moveConstant = 10;
+			  var context = canvas.getContext("2d");
+
+			  window.addEventListener("resize", function(){
+			  canvas.width = document.documentElement.clientWidth - document.getElementById("chat-box").offsetWidth - 29;
+			  canvas.height = document.documentElement.clientHeight - 15;
+			  scaleMap();
+			  //render();
+			  }, true);
+			  //console.log('here');
+			  var myId = -1;
+			  var players = new Array();
+
+			  var mapSide = -1;
+			  scaleMap();
+
+			  var mapBLCx = canvas.width/2 - canvas.height/myScale/8*3 - 100;
+			  var mapBLCy = canvas.height/2 + canvas.height/myScale/2 + 100;
+
+				var going_left = false;
+				var going_right = false;
+				var going_up = false;
+				var going_down = false;
+
+			  addEventListener("keydown", function(e){
+			  	if(e.keyCode === 65) //A
+			  		going_left = true; 
+    			if(e.keyCode === 68) //D
+    				going_right = true;
+	    		if(e.keyCode === 87) //W
+	    			going_up = true;
+	    		if(e.keyCode === 83) //S
+	    			going_down = true;
+				});
+			  addEventListener("keyup", function(e){
+			  	if(e.keyCode === 65)
+			  		going_left = false;
+    			if(e.keyCode === 68)
+    				going_right = false;
+	    		if(e.keyCode === 87)
+	    			going_up = false;
+	    		if(e.keyCode === 83)
+	    			going_down = false;
+				});
+
+			  render();
+
+			  	function render () {
+			  		console.log(myId);
+			  		context.clearRect(0, 0, canvas.width, canvas.height);
+			  		var myIndex = -1;
+			  		for (var i = players.length - 1; i >= 0; i--) {
+			  			if(players[i].id==myId){
+			  				myIndex = i;
+			  				drawPlayer(players[i].x,players[i].y,players[i].vector);
+			  			}
+			  			else
+			  				drawPlayers(players[i].x,players[i].y,players[i].vector);
+			  		};
+					
+					if(myIndex!=-1){
+						var newX = 0;
+						var newY = 0;
+				  		if(going_left)
+				  			newX-=moveConstant;
+				  		if(going_right)
+				  			newX+=moveConstant;
+				  		if(going_up)
+				  			newY+=moveConstant;
+				  		if(going_down)
+				  			newY-=moveConstant;
+				  		if(newX!=0 || newY!=0){
+				  			socket.emit('update-player', players[myIndex].x+newX,players[myIndex].y+newY,players[myIndex].vector);}
+			  		}
+			  			
+			  		requestAnimationFrame(render);
+			  	}
+			
+			  	function drawPlayer(x,y,v){
+			  		// the triangle
+					context.beginPath();
+					context.moveTo(canvas.width/2, canvas.height/2 - canvas.height/myScale/2);
+					context.lineTo(canvas.width/2 - canvas.height/myScale/8*3, canvas.height/2 + canvas.height/myScale/2);
+					context.lineTo(canvas.width/2 + canvas.height/myScale/8*3, canvas.height/2 + canvas.height/myScale/2);
+					context.closePath();
+					 
+					// the outline
+					context.lineWidth = canvas.height/myScale/3;
+					context.strokeStyle = '#000000';
+					context.stroke();
+					 
+					// the fill color
+					context.fillStyle = "#FFFFFF";
+					context.fill();
+
+					context.fillStyle = "#000000";
+					var blcX = canvas.width/2 - canvas.height/myScale/8*3;
+					var blcY = canvas.height/2 + canvas.height/myScale/2;
+					//leftWall
+					mapBLCx = blcX - x;
+					mapBLCy = blcY + y;
+			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy - mapSide - canvas.height/2, canvas.width/2, mapSide + canvas.height/2);
+			  		//rightWall
+			  		context.fillRect(mapBLCx + mapSide, mapBLCy - mapSide, canvas.width/2 , mapSide + canvas.height/2);
+			  		//topWall
+			  		context.fillRect(mapBLCx, mapBLCy - canvas.height/2 - mapSide, mapSide + canvas.width/2, canvas.height/2);
+			  		//bottomWall
+			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy, mapSide + canvas.width/2, canvas.height/2);
+			  	}
+
+			  	function drawPlayers(x,y,v){
+					// the triangle
+					context.beginPath();
+					context.moveTo(mapBLCx + x + canvas.height/myScale/8*3, mapBLCy - y - canvas.height/myScale);
+					context.lineTo(mapBLCx + x, mapBLCy - y);
+					context.lineTo(mapBLCx + x + canvas.height/myScale/4*3, mapBLCy - y);
+					context.closePath();
+					 
+					// the outline
+					context.lineWidth = canvas.height/myScale/3;
+					context.strokeStyle = '#000000';
+					context.stroke();
+					 
+					// the fill color
+					context.fillStyle = "#000000";
+					context.fill();
+			  	}
+
+			  	function scaleMap(){
+			  		mapSide = canvas.height * (players.length/2);
+			  		if(mapSide<=0) mapSide = canvas.height/2;
+			  	}
+
+			</script>
+		</div>
+		
+		<script>
+			var socket = io();
+			
+			//script that allows user to press enter to submit textarea text
+			//also allows shift+enter for new line
+			$('textarea').keydown(function(event) {
+				if (event.keyCode == 13 && !event.shiftKey) {
+					var text = $('#text-box').val();
+					
+					if(text) //checks for empty text
+					{
+						$('form').submit();
+						$('#text-box').val('');
+					}
+					return false;
+				}
+			});
+			
+			$('form').submit(function() {
+				socket.emit('chat-message', $('#text-box').val());
+				
+				return false;
+			});
+			
+			socket.on('chat-message', function(msg) {
+				$('#messages').append($('<li>').text(msg));
+				
+				//keeps chat scrolled to bottom of chat area
+				var objDiv = document.getElementById("chat-box");
+				objDiv.scrollTop = objDiv.scrollHeight;
+			});
+			socket.on('get-id', function(id) {
+				if(myId==-1)
+					myId=id;
+			});
+			socket.on('update-players', function(p) {
+				players=p;
+				scaleMap();
+			});
+		</script>
+	</body>
+</html>
