@@ -154,7 +154,7 @@
 			  	}
 
 			  	function scaleMap(){
-			  		mapSide = canvas.height * (players.length/2);
+			  		mapSide = canvas.height/4*3 * Math.sqrt(players.length);
 			  		if(mapSide<=0) mapSide = canvas.height/2;
 			  	}
 
