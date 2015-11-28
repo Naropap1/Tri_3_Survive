@@ -3,6 +3,7 @@ var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var currId = 0;
+var bullID = 0;
 
 var players = new Array();
 
@@ -22,7 +23,8 @@ io.on('connection', function(socket) {
 		y: 100,
 		vx:-1,
 		vy:-1,
-		spawned: true
+		spawned: true,
+		bR:0
 	};
 	var id = currId;
 	io.emit('get-id',currId);
@@ -31,7 +33,7 @@ io.on('connection', function(socket) {
 	//console.log(players.length);
 	io.emit('update-players',players);
 
-	socket.on('update-player', function(newX,newY,newvX,newvY){
+	socket.on('update-player', function(newX,newY,newvX,newvY,newbR){
 		var index = -1;
 		for (var i = players.length - 1; i >= 0; i--) {
 			if(players[i].id == id)
@@ -41,7 +43,17 @@ io.on('connection', function(socket) {
 		players[index].y=newY;
 		players[index].vx=newvX;
 		players[index].vy=newvY;
+		players[index].bR=newbR;
 		io.emit('update-players',players);
+	});
+
+	socket.on('new-bullet', function(originX,originY,bvX,bvY){
+		io.emit('new-bullet',originX,originY,bvX,bvY,bullID);
+		bullID+=1;
+	});
+
+	socket.on('rem-bullet',function(bID){
+		io.emit('rem-bullet',bID);
 	});
 
 	socket.on('disconnect', function(){

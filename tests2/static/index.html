@@ -39,6 +39,7 @@
 			  //console.log('here');
 			  var myId = -1;
 			  var players = new Array();
+			  var bullets = new Array();
 
 			  var mapSide = -1;
 			  scaleMap();
@@ -50,6 +51,8 @@
 				var going_right = false;
 				var going_up = false;
 				var going_down = false;
+				var shooting = false;
+				var bulletRadius=0;
 
 			  var mouseX = 100;
 			  var mouseY = 100;
@@ -64,6 +67,8 @@
 	    			going_up = true;
 	    		if(e.keyCode === 83) //S
 	    			going_down = true;
+	    		if(e.keyCode == 32)// *space*
+	    			shooting=true;
 				});
 			  addEventListener("keyup", function(e){
 			  	if(e.keyCode === 65)
@@ -74,6 +79,8 @@
 	    			going_up = false;
 	    		if(e.keyCode === 83)
 	    			going_down = false;
+	    		if(e.keyCode == 32)
+	    			shooting=false;
 				});
 			  addEventListener("mousemove", function(e){
 			  	mouseX = e.clientX - canvas.width/2;
@@ -98,6 +105,10 @@
 			  				drawPlayers(players[i]);
 			  		};
 					
+			  		for (var i = bullets.length - 1; i >= 0; i--) {
+			  			handleBullet(bullets[i]);
+			  		};
+
 					if(myIndex!=-1){
 						var newX = 0;
 						var newY = 0;
@@ -110,10 +121,10 @@
 				  		if(going_down)
 				  			newY-=moveConstant;
 				  		if(newX!=0 || newY!=0 ||  updatedM){
-				  			console.log('here');
+				  			//console.log('here');
 				  			updatedM = false;
 				  			var c = Math.sqrt( Math.pow(mouseX,2) + Math.pow(mouseY,2) );
-				  			socket.emit('update-player', players[myIndex].x + newX, players[myIndex].y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) );
+				  			socket.emit('update-player', players[myIndex].x + newX, players[myIndex].y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) , bulletRadius);
 				  		}
 			  		}
 			  			
@@ -141,14 +152,40 @@
 					 
 					// the outline
 					context.lineWidth = canvas.height/myScale/10;
-					context.strokeStyle = '#000000';
+					context.strokeStyle = "#000000";
 					context.stroke();
 					 
 					// the fill color
 					context.fillStyle = "#FFFFFF";
 					context.fill();
 
-					context.fillStyle = "#000000";
+					if(shooting){
+						if(bulletRadius<halfHeight/2)
+							bulletRadius+=.15;
+						else{
+							bulletRadius=0;
+							socket.emit('new-bullet', p.x , p.y ,p.vx, p.vy);
+						}
+						socket.emit('update-player', p.x, p.y , p.vx , p.vy , bulletRadius);
+					}
+					else
+						if(bulletRadius>0){
+							bulletRadius-=.15;
+							socket.emit('update-player', p.x, p.y , p.vx , p.vy , bulletRadius);
+						}
+
+					if(bulletRadius>0){
+						context.beginPath();
+
+						context.fillStyle = "#000000";
+						context.arc(x0 + (halfHeight+bulletRadius)*p.vx/halfHeight, y0 - (halfHeight+bulletRadius)*p.vy/halfHeight, bulletRadius, 0, 2 * Math.PI, false);
+      					context.fill();
+
+      					context.closePath();
+      				}
+
+      				context.fillStyle = "#000000";
+
 					var blcX = canvas.width/2 - canvas.height/myScale/8*3;
 					var blcY = canvas.height/2 + canvas.height/myScale/2;
 					//leftWall
@@ -189,6 +226,42 @@
 					// the fill color
 					context.fillStyle = "#000000";
 					context.fill();
+
+					if(p.bR>0){
+						context.beginPath();
+
+						context.fillStyle = "#000000";
+						context.arc(centerX + (halfHeight+p.bR)*p.vx/halfHeight, centerY - (halfHeight+p.bR)*p.vy/halfHeight, p.bR, 0, 2 * Math.PI, false);
+      					context.fill();
+
+      					context.closePath();
+      				}
+			  	}
+
+			  	function handleBullet(b){
+			  		console.log('here');
+			  		var centerX = mapBLCx + b.ox + halfHeight/4*3;
+			  		var centerY = mapBLCy - b.oy - halfHeight;
+			  		var d = halfHeight + halfHeight/2;
+			  		var x1 = d*b.vx/halfHeight;
+			  		var y1 = d*b.vy/halfHeight;
+
+			  		context.beginPath();
+
+					context.arc(centerX + (d+b.dist)*x1/d, centerY - (d+b.dist)*y1/d, halfHeight/2, 0 , 2 * Math.PI, false);
+					context.fillStyle = '#000000';
+					context.fill();
+
+      				b.dist+= moveConstant*2;
+
+      				if((centerY - (d+b.dist)*y1/d - halfHeight/4) <= (mapBLCy-  mapSide))
+      					socket.emit('rem-bullet',b.id);
+      				else if((centerY - (d+b.dist)*y1/d + halfHeight/4) >= mapBLCy)
+      					socket.emit('rem-bullet',b.id);
+      				else if( (centerX + (d+b.dist)*x1/d - halfHeight/4) <= mapBLCx)
+      					socket.emit('rem-bullet',b.id);
+      				else if((centerX + (d+b.dist)*x1/d + halfHeight/4) >= (mapBLCx + mapSide))
+      					socket.emit('rem-bullet',b.id);
 			  	}
 
 			  	function instantiatePlayer(p){
@@ -242,6 +315,25 @@
 			socket.on('update-players', function(p) {
 				players=p;
 				scaleMap();
+			});
+			socket.on('new-bullet', function(originX,originY,bvX,bvY,bullID) {
+				var bullet = {
+					id: bullID,
+					ox: originX,
+					oy: originY,
+					vx: bvX,
+					vy: bvY,
+					dist: 0
+				};
+				bullets.push(bullet);
+			});
+			socket.on('rem-bullet',function(bullID){
+				for (var i = bullets.length - 1; i >= 0; i--) {
+					if(bullets[i].id == bullID){
+						bullets.splice(i,1);
+						break;
+					}
+				};
 			});
 		</script>
 	</body>
