@@ -20,7 +20,9 @@ io.on('connection', function(socket) {
 		score: 0,
 		x: 100,
 		y: 100,
-		vector:0
+		vx:-1,
+		vy:-1,
+		spawned: true
 	};
 	var id = currId;
 	io.emit('get-id',currId);
@@ -29,7 +31,7 @@ io.on('connection', function(socket) {
 	//console.log(players.length);
 	io.emit('update-players',players);
 
-	socket.on('update-player', function(newX,newY,newV){
+	socket.on('update-player', function(newX,newY,newvX,newvY){
 		var index = -1;
 		for (var i = players.length - 1; i >= 0; i--) {
 			if(players[i].id == id)
@@ -37,8 +39,9 @@ io.on('connection', function(socket) {
 		};
 		players[index].x=newX;
 		players[index].y=newY;
-		players[index].vector=newV;
-		io.emit('update-players',players)
+		players[index].vx=newvX;
+		players[index].vy=newvY;
+		io.emit('update-players',players);
 	});
 
 	socket.on('disconnect', function(){

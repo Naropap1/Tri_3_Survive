@@ -25,12 +25,14 @@
 			  canvas.width = document.documentElement.clientWidth - document.getElementById("chat-box").offsetWidth - 29;
 			  canvas.height = document.documentElement.clientHeight - 15;
 			  var myScale = 15;
+			  var halfHeight = canvas.height/myScale/2;
 			  var moveConstant = 10;
 			  var context = canvas.getContext("2d");
 
 			  window.addEventListener("resize", function(){
 			  canvas.width = document.documentElement.clientWidth - document.getElementById("chat-box").offsetWidth - 29;
 			  canvas.height = document.documentElement.clientHeight - 15;
+			  halfHeight = canvas.height/myScale/2;
 			  scaleMap();
 			  //render();
 			  }, true);
@@ -48,6 +50,10 @@
 				var going_right = false;
 				var going_up = false;
 				var going_down = false;
+
+			  var mouseX = 100;
+			  var mouseY = 100;
+			  var updatedM = false;
 
 			  addEventListener("keydown", function(e){
 			  	if(e.keyCode === 65) //A
@@ -69,20 +75,27 @@
 	    		if(e.keyCode === 83)
 	    			going_down = false;
 				});
+			  addEventListener("mousemove", function(e){
+			  	mouseX = e.clientX - canvas.width/2;
+			  	mouseY = (e.clientY - canvas.height/2) * -1;
+			  	updatedM=true;
+			  })
 
 			  render();
 
 			  	function render () {
-			  		console.log(myId);
 			  		context.clearRect(0, 0, canvas.width, canvas.height);
 			  		var myIndex = -1;
 			  		for (var i = players.length - 1; i >= 0; i--) {
+			  			if(players[i].vx==-1)
+			  				instantiatePlayer(players[i]);
+
 			  			if(players[i].id==myId){
 			  				myIndex = i;
-			  				drawPlayer(players[i].x,players[i].y,players[i].vector);
+			  				drawPlayer(players[i]);
 			  			}
 			  			else
-			  				drawPlayers(players[i].x,players[i].y,players[i].vector);
+			  				drawPlayers(players[i]);
 			  		};
 					
 					if(myIndex!=-1){
@@ -96,23 +109,38 @@
 				  			newY+=moveConstant;
 				  		if(going_down)
 				  			newY-=moveConstant;
-				  		if(newX!=0 || newY!=0){
-				  			socket.emit('update-player', players[myIndex].x+newX,players[myIndex].y+newY,players[myIndex].vector);}
+				  		if(newX!=0 || newY!=0 ||  updatedM){
+				  			console.log('here');
+				  			updatedM = false;
+				  			var c = Math.sqrt( Math.pow(mouseX,2) + Math.pow(mouseY,2) );
+				  			socket.emit('update-player', players[myIndex].x + newX, players[myIndex].y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) );
+				  		}
 			  		}
 			  			
 			  		requestAnimationFrame(render);
 			  	}
 			
-			  	function drawPlayer(x,y,v){
+			  	function drawPlayer(p){
+			  		//console.log(p.vx + ' . ' + p.vy)
+			  		var x0 = canvas.width/2;
+			  		var y0 = canvas.height/2;
+			  		var x1 = x0+p.vx;
+			  		var y1 = y0-p.vy;
+			  		var x2 = x0-p.vx;
+			  		var y2 = y0+p.vy;
+			  		var h = halfHeight/4*3;
 			  		// the triangle
 					context.beginPath();
-					context.moveTo(canvas.width/2, canvas.height/2 - canvas.height/myScale/2);
-					context.lineTo(canvas.width/2 - canvas.height/myScale/8*3, canvas.height/2 + canvas.height/myScale/2);
-					context.lineTo(canvas.width/2 + canvas.height/myScale/8*3, canvas.height/2 + canvas.height/myScale/2);
+					//context.moveTo(canvas.width/2 + p.vx, canvas.height/2 - p.vy);
+					//context.lineTo(canvas.width/2 - canvas.height/myScale/8*3, canvas.height/2 + p.vy);
+					//context.lineTo(canvas.width/2 + canvas.height/myScale/8*3, canvas.height/2 + canvas.height/myScale/2);
+					context.moveTo(x1, y1);
+					context.lineTo(x2 + ( h * (y1 - y2) / (2 * halfHeight )), y2 - (h * (x1 - x2) / (2 * halfHeight)));
+					context.lineTo(x2 - ( h * (y1 - y2) / (2 * halfHeight )), y2 + (h * (x1 - x2) / (2 * halfHeight)));
 					context.closePath();
 					 
 					// the outline
-					context.lineWidth = canvas.height/myScale/3;
+					context.lineWidth = canvas.height/myScale/10;
 					context.strokeStyle = '#000000';
 					context.stroke();
 					 
@@ -124,8 +152,8 @@
 					var blcX = canvas.width/2 - canvas.height/myScale/8*3;
 					var blcY = canvas.height/2 + canvas.height/myScale/2;
 					//leftWall
-					mapBLCx = blcX - x;
-					mapBLCy = blcY + y;
+					mapBLCx = blcX - p.x;
+					mapBLCy = blcY + p.y;
 			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy - mapSide - canvas.height/2, canvas.width/2, mapSide + canvas.height/2);
 			  		//rightWall
 			  		context.fillRect(mapBLCx + mapSide, mapBLCy - mapSide, canvas.width/2 , mapSide + canvas.height/2);
@@ -135,22 +163,37 @@
 			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy, mapSide + canvas.width/2, canvas.height/2);
 			  	}
 
-			  	function drawPlayers(x,y,v){
+			  	function drawPlayers(p){
+			  		var centerX = mapBLCx + p.x + halfHeight/4*3;
+			  		var centerY = mapBLCy - p.y - halfHeight;
+			  		var x0 = mapBLCx + p.x + halfHeight/4*3;
+			  		var y0 = mapBLCy - p.y - halfHeight;
+			  		var x1 = x0+p.vx;
+			  		var y1 = y0-p.vy;
+			  		var x2 = x0-p.vx;
+			  		var y2 = y0+p.vy;
+			  		var h = halfHeight/4*3;
+			  		
 					// the triangle
 					context.beginPath();
-					context.moveTo(mapBLCx + x + canvas.height/myScale/8*3, mapBLCy - y - canvas.height/myScale);
-					context.lineTo(mapBLCx + x, mapBLCy - y);
-					context.lineTo(mapBLCx + x + canvas.height/myScale/4*3, mapBLCy - y);
+					context.moveTo(x1, y1);
+					context.lineTo(x2 + ( h * (y1 - y2) / (2 * halfHeight )), y2 - (h * (x1 - x2) / (2 * halfHeight)));
+					context.lineTo(x2 - ( h * (y1 - y2) / (2 * halfHeight )), y2 + (h * (x1 - x2) / (2 * halfHeight)));
 					context.closePath();
 					 
 					// the outline
-					context.lineWidth = canvas.height/myScale/3;
+					context.lineWidth = canvas.height/myScale/10;
 					context.strokeStyle = '#000000';
 					context.stroke();
 					 
 					// the fill color
 					context.fillStyle = "#000000";
 					context.fill();
+			  	}
+
+			  	function instantiatePlayer(p){
+			  		p.vx=0;
+			  		p.vy=halfHeight;
 			  	}
 
 			  	function scaleMap(){
