@@ -92,15 +92,12 @@
 
 			  	function render () {
 			  		context.clearRect(0, 0, canvas.width, canvas.height);
-			  		var myIndex = -1;
 			  		for (var i = players.length - 1; i >= 0; i--) {
 			  			if(players[i].vx==-1)
 			  				instantiatePlayer(players[i]);
 
-			  			if(players[i].id==myId){
-			  				myIndex = i;
+			  			if(players[i].id==myId)
 			  				drawPlayer(players[i]);
-			  			}
 			  			else
 			  				drawPlayers(players[i]);
 			  		};
@@ -108,25 +105,6 @@
 			  		for (var i = bullets.length - 1; i >= 0; i--) {
 			  			handleBullet(bullets[i]);
 			  		};
-
-					if(myIndex!=-1){
-						var newX = 0;
-						var newY = 0;
-				  		if(going_left)
-				  			newX-=moveConstant;
-				  		if(going_right)
-				  			newX+=moveConstant;
-				  		if(going_up)
-				  			newY+=moveConstant;
-				  		if(going_down)
-				  			newY-=moveConstant;
-				  		if(newX!=0 || newY!=0 ||  updatedM){
-				  			//console.log('here');
-				  			updatedM = false;
-				  			var c = Math.sqrt( Math.pow(mouseX,2) + Math.pow(mouseY,2) );
-				  			socket.emit('update-player', players[myIndex].x + newX, players[myIndex].y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) , bulletRadius);
-				  		}
-			  		}
 			  			
 			  		requestAnimationFrame(render);
 			  	}
@@ -198,6 +176,25 @@
 			  		context.fillRect(mapBLCx, mapBLCy - canvas.height/2 - mapSide, mapSide + canvas.width/2, canvas.height/2);
 			  		//bottomWall
 			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy, mapSide + canvas.width/2, canvas.height/2);
+
+			  		longestEdge = Math.sqrt(Math.pow(halfHeight/4*3,2) + Math.pow(halfHeight,2));
+
+			  		var newX = 0;
+						var newY = 0;
+				  		if(going_left & p.x + halfHeight/4*3 - longestEdge >= moveConstant)
+				  			newX-=moveConstant;
+				  		if(going_right & p.x + halfHeight/4*3 + longestEdge <= mapSide - moveConstant)
+				  			newX+=moveConstant;
+				  		if(going_up & p.y + halfHeight + longestEdge  <= mapSide - moveConstant)
+				  			newY+=moveConstant;
+				  		if(going_down & p.y + halfHeight - longestEdge >= moveConstant)
+				  			newY-=moveConstant;
+				  		if(newX!=0 || newY!=0 ||  updatedM){
+				  			//console.log('here');
+				  			updatedM = false;
+				  			var c = Math.sqrt( Math.pow(mouseX,2) + Math.pow(mouseY,2) );
+				  			socket.emit('update-player', p.x + newX, p.y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) , bulletRadius);
+				  		}
 			  	}
 
 			  	function drawPlayers(p){
@@ -239,7 +236,7 @@
 			  	}
 
 			  	function handleBullet(b){
-			  		console.log('here');
+			  		//console.log('here');
 			  		var centerX = mapBLCx + b.ox + halfHeight/4*3;
 			  		var centerY = mapBLCy - b.oy - halfHeight;
 			  		var d = halfHeight + halfHeight/2;
@@ -270,8 +267,27 @@
 			  	}
 
 			  	function scaleMap(){
-			  		mapSide = canvas.height/4*3 * Math.sqrt(players.length);
-			  		if(mapSide<=0) mapSide = canvas.height/2;
+			  		//console.log('danger');
+			  		if(mapSide != canvas.height/4*3 * Math.sqrt(players.length)){
+			  			mapSide = canvas.height/4*3 * Math.sqrt(players.length);
+			  			longestEdge = Math.sqrt(Math.pow(halfHeight/4*3,2) + Math.pow(halfHeight,2));
+			  			for (var i = players.length - 1; i >= 0; i--) {
+			  				var change = false;
+			  				var correctX = players[i].x;
+			  				var correctY = players[i].y;
+			  				if(players[i].x + halfHeight/4*3 + longestEdge > mapSide){
+			  					change=true;
+			  					correctX = mapSide-longestEdge-halfHeight/4*3;
+			  				}
+							if(players[i].y + halfHeight + longestEdge  > mapSide - moveConstant){
+								change=true;
+								correctY = mapSide-longestEdge-halfHeight;
+							}
+							if(change)
+								socket.emit('update-player', correctX, correctY , players[i].vx , players[i].vy , players[i].bR);
+			  			};
+			  			if(mapSide<=0) mapSide = canvas.height/2;
+			  		}
 			  	}
 
 			</script>
