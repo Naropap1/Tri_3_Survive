@@ -1,9 +1,16 @@
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
+
+//socket.io
 var io = require('socket.io')(http);
+
+//sqlite3
+var fs = require('fs');
+var file = 'users.db';
+var exists = fs.existsSync(file);
 var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('users');
+var db = new sqlite3.Database(file);
 
 db.run("create table if not exists users (username varchar(100) primary key, password varchar(100), highscore int, totalkills int, totaldeaths int)");
 
@@ -151,7 +158,7 @@ app.delete('/users/*', function(req, res) {
 });
 
 //start server
-var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8000;
+var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 var server_ip = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 
 http.listen(server_port, server_ip, function(){
