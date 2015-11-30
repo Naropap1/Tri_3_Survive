@@ -52,7 +52,36 @@ io.on('connection', function(socket) {
 		bullID+=1;
 	});
 
-	socket.on('rem-bullet',function(bID){
+	socket.on('rem-bullet',function(bID,owner){
+		if(owner!=-1){
+			var indexOwner = -1;
+			var indexHit = -1;
+
+			//console.log(players[0].id + " , " + players[1].id + " . " + id + " . "+owner);
+
+
+			for (var i = 0; i<players.length ; i++) {
+				console.log("a");
+
+				if(players[i].id == owner){
+					indexOwner = i;
+				}
+			};
+			for (var i = 0; i<players.length ; i++) {
+				if(players[i].id == id)
+					indexHit = i;
+			};
+			//console.log(players[0].id + " , " + players[1].id + " . " + id);
+			//console.log(indexOwner+ " , "+indexHit);
+
+			players[indexHit].score+=10;
+
+			if(players[indexOwner].score >= players[indexHit].score)
+				players[indexOwner].score+=10;
+			else
+				players[indexOwner].score+= Math.round(10 + players[indexHit].score*.5);
+			io.emit('update-players',players);
+		}
 		io.emit('rem-bullet',bID);
 	});
 

@@ -169,6 +169,8 @@
       				}
       				var d = halfHeight + halfHeight/2;
 
+      				//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
       				for (var i = bullets.length - 1; i >= 0; i--) {
       					//console.log(myId + " . " + bullets[i].owner);
       					if(bullets[i].owner != myId){
@@ -176,15 +178,18 @@
       					var bY = (mapBLCy - bullets[i].oy - halfHeight) - (d+bullets[i].dist)*(d*bullets[i].vy/halfHeight)/d;
       					if(bX < (x0 + longestEdge + halfHeight/2) & bX > ( x0 - longestEdge - halfHeight/2) & bY > (y0 - longestEdge - halfHeight/2) & bY < (y0 + longestEdge + halfHeight/2)){
       						if(checkLine(lx,ly,x1,y1,bX,bY, Math.sqrt(Math.pow(halfHeight*2,2) + Math.pow(h,2)))){
-      							socket.emit('rem-bullet',bullets[i].id);
+      							socket.emit('rem-bullet',bullets[i].id,bullets[i].owner);
+      							//change html
       							break;
       						}
       						else if(checkLine(x1,y1,rx,ry,bX,bY, Math.sqrt(Math.pow(halfHeight*2,2) + Math.pow(h,2)))){
-      							socket.emit('rem-bullet',bullets[i].id);
+      							socket.emit('rem-bullet',bullets[i].id,bullets[i].owner);
+      							//change html
       							break;
       						}
       						else if(checkLine(rx,ry,lx,ly,bX,bY,h*2)){
-      							socket.emit('rem-bullet',bullets[i].id);
+      							socket.emit('rem-bullet',bullets[i].id,bullets[i].owner);
+      							//change html
       							break;
       						}
       					}}
@@ -278,13 +283,13 @@
       				b.dist+= moveConstant*2;
 
       				if((centerY - (d+b.dist)*y1/d - halfHeight/4) <= (mapBLCy-  mapSide))
-      					socket.emit('rem-bullet',b.id);
+      					socket.emit('rem-bullet',b.id,-1);
       				else if((centerY - (d+b.dist)*y1/d + halfHeight/4) >= mapBLCy)
-      					socket.emit('rem-bullet',b.id);
+      					socket.emit('rem-bullet',b.id,-1);
       				else if( (centerX + (d+b.dist)*x1/d - halfHeight/4) <= mapBLCx)
-      					socket.emit('rem-bullet',b.id);
+      					socket.emit('rem-bullet',b.id,-1);
       				else if((centerX + (d+b.dist)*x1/d + halfHeight/4) >= (mapBLCx + mapSide))
-      					socket.emit('rem-bullet',b.id);
+      					socket.emit('rem-bullet',b.id,-1);
 			  	}
 
 			  	function checkLine(x1 , y1 , x2 , y2 , cx , cy, distance){
