@@ -47,8 +47,8 @@ io.on('connection', function(socket) {
 		io.emit('update-players',players);
 	});
 
-	socket.on('new-bullet', function(originX,originY,bvX,bvY){
-		io.emit('new-bullet',originX,originY,bvX,bvY,bullID);
+	socket.on('new-bullet', function(originX,originY,bvX,bvY,ownerID){
+		io.emit('new-bullet',originX,originY,bvX,bvY,bullID,ownerID);
 		bullID+=1;
 	});
 

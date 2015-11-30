@@ -27,6 +27,7 @@
 			  var myScale = 15;
 			  var halfHeight = canvas.height/myScale/2;
 			  var moveConstant = 10;
+			  var collisionSpacing = 7;
 			  var context = canvas.getContext("2d");
 
 			  window.addEventListener("resize", function(){
@@ -118,14 +119,19 @@
 			  		var x2 = x0-p.vx;
 			  		var y2 = y0+p.vy;
 			  		var h = halfHeight/4*3;
+			  		var lx = x2 + ( h * (y1 - y2) / (2 * halfHeight ));
+			  		var ly = y2 - (h * (x1 - x2) / (2 * halfHeight));
+			  		var rx = x2 - ( h * (y1 - y2) / (2 * halfHeight ));
+			  		var ry = y2 + (h * (x1 - x2) / (2 * halfHeight));
+			  		var longestEdge = Math.sqrt(Math.pow(halfHeight/4*3,2) + Math.pow(halfHeight,2));
 			  		// the triangle
 					context.beginPath();
 					//context.moveTo(canvas.width/2 + p.vx, canvas.height/2 - p.vy);
 					//context.lineTo(canvas.width/2 - canvas.height/myScale/8*3, canvas.height/2 + p.vy);
 					//context.lineTo(canvas.width/2 + canvas.height/myScale/8*3, canvas.height/2 + canvas.height/myScale/2);
 					context.moveTo(x1, y1);
-					context.lineTo(x2 + ( h * (y1 - y2) / (2 * halfHeight )), y2 - (h * (x1 - x2) / (2 * halfHeight)));
-					context.lineTo(x2 - ( h * (y1 - y2) / (2 * halfHeight )), y2 + (h * (x1 - x2) / (2 * halfHeight)));
+					context.lineTo(lx, ly);
+					context.lineTo(rx, ry);
 					context.closePath();
 					 
 					// the outline
@@ -142,7 +148,7 @@
 							bulletRadius+=.15;
 						else{
 							bulletRadius=0;
-							socket.emit('new-bullet', p.x , p.y ,p.vx, p.vy);
+							socket.emit('new-bullet', p.x , p.y ,p.vx, p.vy, myId);
 						}
 						socket.emit('update-player', p.x, p.y , p.vx , p.vy , bulletRadius);
 					}
@@ -161,6 +167,27 @@
 
       					context.closePath();
       				}
+      				var d = halfHeight + halfHeight/2;
+
+      				for (var i = bullets.length - 1; i >= 0; i--) {
+      					if(bullets[i].owner != myId){
+      					var bX = (mapBLCx + bullets[i].ox + halfHeight/4*3) + (d+bullets[i].dist)*(d*bullets[i].vx/halfHeight)/d;
+      					var bY = (mapBLCy - bullets[i].oy - halfHeight) - (d+bullets[i].dist)*(d*bullets[i].vy/halfHeight)/d;
+      					if(bX < (x0 + longestEdge + halfHeight/2) & bX > ( x0 - longestEdge - halfHeight/2) & bY > (y0 - longestEdge - halfHeight/2) & bY < (y0 + longestEdge + halfHeight/2)){
+      						if(checkLine(lx,ly,x1,y1,bX,bY, Math.sqrt(Math.pow(halfHeight*2,2) + Math.pow(h,2)))){
+      							socket.emit('rem-bullet',bullets[i].id);
+      							break;
+      						}
+      						else if(checkLine(x1,y1,rx,ry,bX,bY, Math.sqrt(Math.pow(halfHeight*2,2) + Math.pow(h,2)))){
+      							socket.emit('rem-bullet',bullets[i].id);
+      							break;
+      						}
+      						else if(checkLine(rx,ry,lx,ly,bX,bY,h*2)){
+      							socket.emit('rem-bullet',bullets[i].id);
+      							break;
+      						}
+      					}}
+      				};
 
       				context.fillStyle = "#000000";
 
@@ -176,8 +203,6 @@
 			  		context.fillRect(mapBLCx, mapBLCy - canvas.height/2 - mapSide, mapSide + canvas.width/2, canvas.height/2);
 			  		//bottomWall
 			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy, mapSide + canvas.width/2, canvas.height/2);
-
-			  		longestEdge = Math.sqrt(Math.pow(halfHeight/4*3,2) + Math.pow(halfHeight,2));
 
 			  		var newX = 0;
 						var newY = 0;
@@ -261,6 +286,17 @@
       					socket.emit('rem-bullet',b.id);
 			  	}
 
+			  	function checkLine(x1 , y1 , x2 , y2 , cx , cy, distance){
+			  		var spacing = distance/collisionSpacing;
+			  		for(var i = 0 ; i < collisionSpacing ; i++){
+			  			var checkThisX = (i*spacing)*(x2-x1)/distance;
+			  			var checkThisY = (i*spacing)*(y2-y1)/distance;
+			  			if(Math.sqrt( Math.pow(cx - (x1+checkThisX),2) + Math.pow(cy - (y1+checkThisY),2) ) <= halfHeight/2)
+			  				return true;
+			  		}
+			  		return false;
+			  	}
+
 			  	function instantiatePlayer(p){
 			  		p.vx=0;
 			  		p.vy=halfHeight;
@@ -332,9 +368,10 @@
 				players=p;
 				scaleMap();
 			});
-			socket.on('new-bullet', function(originX,originY,bvX,bvY,bullID) {
+			socket.on('new-bullet', function(originX,originY,bvX,bvY,bullID,o) {
 				var bullet = {
 					id: bullID,
+					owner: o,
 					ox: originX,
 					oy: originY,
 					vx: bvX,
