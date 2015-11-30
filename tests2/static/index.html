@@ -170,6 +170,7 @@
       				var d = halfHeight + halfHeight/2;
 
       				for (var i = bullets.length - 1; i >= 0; i--) {
+      					//console.log(myId + " . " + bullets[i].owner);
       					if(bullets[i].owner != myId){
       					var bX = (mapBLCx + bullets[i].ox + halfHeight/4*3) + (d+bullets[i].dist)*(d*bullets[i].vx/halfHeight)/d;
       					var bY = (mapBLCy - bullets[i].oy - halfHeight) - (d+bullets[i].dist)*(d*bullets[i].vy/halfHeight)/d;
