@@ -142,13 +142,12 @@ button:focus {
 
 /* Login form */
 #form {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-40%, -40%);
+	display: block;
+	text-align: center;
 }
 
 input {
+	display: inline-block;
 	margin: 10px;
 	height: 48px;
 	font-size: 36px;

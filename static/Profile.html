@@ -4,7 +4,9 @@
 <h2 id="deaths"></h2>
 
 <button id="play-button" class="large-button profile-button">Play Game!</button>
-<br>
+</br>
+<button id="instructions-button" class="small-button profile-button">Instructions</button>
+</br>
 <button id="delete-profile" class="small-button profile-button">Delete Account</button>
 
 <script>
@@ -19,6 +21,11 @@
 			//     Add game when pressed here
 			//////////////////////////////////////////////////////////////
 			$("#content-window").html(" ");
+		});
+		
+		$("instructions-button").click(function() {
+			//loads instructions page
+			$("#content-window").load("Instructions.html");
 		});
 		
 		$("#delete-profile").click(function() {

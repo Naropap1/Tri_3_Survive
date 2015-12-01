@@ -83,12 +83,13 @@
 			dataType: "json",
 			
 			success: function(data) {
+				
 				localStorage['highscore'] = data.highscore;
 				localStorage['totalkills'] = data.kills;
 				localStorage['totaldeaths'] = data.deaths;
+				
+				$("#content-window").load("Profile.html");
 			}
 		});
-		
-		$("#content-window").load("Profile.html");
 	}
 </script>

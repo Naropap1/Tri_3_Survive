@@ -6,11 +6,8 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
 //sqlite3
-var fs = require('fs');
-var file = 'users.db';
-var exists = fs.existsSync(file);
 var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database(file);
+var db = new sqlite3.Database('users');
 
 db.run("create table if not exists users (username varchar(100) primary key, password varchar(100), highscore int, totalkills int, totaldeaths int)");
 
@@ -21,9 +18,64 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(express.static('static'));
 
+
+//identification stuff
+var currId = 0;
+var bullID = 0;
+var players = new Array();
 //socket messages go in here
 io.on('connection', function(socket) {
-	
+	//console.log('user connected');
+	var player = {
+		id: currId,
+		score: 0,
+		x: 100,
+		y: 100,
+		vx:-1,
+		vy:-1,
+		spawned: true,
+		bR:0
+	};
+	var id = currId; //THIS IS ROWID OF USER WHO MADE SOCKET CALL
+	io.emit('get-id',currId);
+	currId++;
+	players.push(player);
+	//console.log(players.length);
+	io.emit('update-players',players);
+
+	socket.on('update-player', function(newX,newY,newvX,newvY,newbR){
+		var index = -1;
+		for (var i = players.length - 1; i >= 0; i--) {
+			if(players[i].id == id)
+				index = i;
+		};
+		players[index].x=newX;
+		players[index].y=newY;
+		players[index].vx=newvX;
+		players[index].vy=newvY;
+		players[index].bR=newbR;
+		io.emit('update-players',players);
+	});
+
+	socket.on('new-bullet', function(originX,originY,bvX,bvY,ownerID){
+		io.emit('new-bullet',originX,originY,bvX,bvY,bullID,ownerID);
+		bullID+=1;
+	});
+
+	socket.on('rem-bullet',function(bID){
+		io.emit('rem-bullet',bID);
+	});
+
+	socket.on('disconnect', function(){
+		var index = -1;
+		for (var i = players.length - 1; i >= 0; i--) {
+			if(players[i].id == id)
+				index = i;
+		};
+		players.splice(index,1);
+		io.emit('update-players',players);
+ 	 });
+	 
 	socket.on('chat-message', function(msg) {
 		io.emit('chat-message', msg);
 	});
@@ -65,7 +117,8 @@ app.get('/users/*/*', function(req, res) {
 						username: rows[0].username,
 						highscore: rows[0].highscore,
 						kills: rows[0].totalkills,
-						deaths: rows[0].totaldeaths};
+						deaths: rows[0].totaldeaths
+						};
 			res.send(response);
 			return;
 		}
@@ -78,9 +131,8 @@ app.get('/users/*/*', function(req, res) {
 //get profile statistics after logged in
 app.get('/users/*', function(req, res) {
 	var response;
-	
 	db.serialize(function() {
-	db.all("SELECT * FROM users WHERE username = ?", req.params[0], function(err, rows) {
+	db.all("SELECT rowid, * FROM users WHERE username = ?", req.params[0], function(err, rows) {
 		//error in database
 		if(err)	{
 			//console.log("db error in get users");
@@ -90,11 +142,13 @@ app.get('/users/*', function(req, res) {
 			return;
 		}
 		else {
-
 			response = {highscore: rows[0].highscore,
 						kills: rows[0].totalkills,
-						deaths: rows[0].totaldeaths};
-						
+						deaths: rows[0].totaldeaths
+						};
+			///////////////////////////////////////////////////////////	
+			currId = rows[0].rowid;
+			///////////////////////////////////////////////////////////
 			res.send(response);
 			return;
 		}
@@ -162,5 +216,5 @@ var server_port = process.env.OPENSHIFT_NODEJS_PORT || 8080;
 var server_ip = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1';
 
 http.listen(server_port, server_ip, function(){
-  console.log('listening on *:3333');
+  console.log('listening on *:8080');
 });

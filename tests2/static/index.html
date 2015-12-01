@@ -282,13 +282,13 @@
 
       				b.dist+= moveConstant*2;
 
-      				if((centerY - (d+b.dist)*y1/d - halfHeight/4) <= (mapBLCy-  mapSide))
+      				if((centerY - (d+b.dist)*y1/d - halfHeight/4) <= (mapBLCy-  mapSide - (halfHeight / 4)))
       					socket.emit('rem-bullet',b.id,-1);
       				else if((centerY - (d+b.dist)*y1/d + halfHeight/4) >= mapBLCy)
       					socket.emit('rem-bullet',b.id,-1);
       				else if( (centerX + (d+b.dist)*x1/d - halfHeight/4) <= mapBLCx)
       					socket.emit('rem-bullet',b.id,-1);
-      				else if((centerX + (d+b.dist)*x1/d + halfHeight/4) >= (mapBLCx + mapSide))
+      				else if((centerX + (d+b.dist)*x1/d + halfHeight/4) >= (mapBLCx + mapSide + (halfHeight / 4)))
       					socket.emit('rem-bullet',b.id,-1);
 			  	}
 
