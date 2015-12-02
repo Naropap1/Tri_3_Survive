@@ -31,17 +31,15 @@
 			  var context = canvas.getContext("2d");
 
 			  window.addEventListener("resize", function(){
-				  canvas.width = document.documentElement.clientWidth - document.getElementById("chat-box").offsetWidth - 29;
-				  canvas.height = document.documentElement.clientHeight - 15;
-				  
-				  scaleMap();
-				  //render();
+			  canvas.width = document.documentElement.clientWidth - document.getElementById("chat-box").offsetWidth - 29;
+			  canvas.height = document.documentElement.clientHeight - 15;
+			  
+			  scaleMap();
+			  //render();
 			  }, true);
 			  //console.log('here');
-
-			  // CHANGE THIS TO lochost
-			  var myName = '';
-			  var players = new Object();
+			  var myId = -1;
+			  var players = new Array();
 			  var bullets = new Array();
 
 			  var mapSide = -1;
@@ -95,13 +93,16 @@
 
 			  	function render () {
 			  		context.clearRect(0, 0, canvas.width, canvas.height);
-			  		for(var player in players){
-			  			if(player === myName)
-			  				drawPlayer(players[player]);
-			  			else
-			  				drawPlayers(players[player]);
-			  		}
+			  		for (var i = players.length - 1; i >= 0; i--) {
+			  			if(players[i].vx==-1)
+			  				instantiatePlayer(players[i]);
 
+			  			if(players[i].id==myId)
+			  				drawPlayer(players[i]);
+			  			else
+			  				drawPlayers(players[i]);
+			  		};
+					
 			  		for (var i = bullets.length - 1; i >= 0; i--) {
 			  			handleBullet(bullets[i]);
 			  		};
@@ -110,7 +111,7 @@
 			  	}
 			
 			  	function drawPlayer(p){
-			  		//console.log(p.x + ' . ' + p.y);
+			  		//console.log(p.vx + ' . ' + p.vy)
 			  		var x0 = canvas.width/2;
 			  		var y0 = canvas.height/2;
 			  		var x1 = x0+p.vx;
@@ -147,14 +148,14 @@
 							bulletRadius+=.15;
 						else{
 							bulletRadius=0;
-							socket.emit('new-bullet', p.x , p.y ,p.vx, p.vy, myName);
+							socket.emit('new-bullet', p.x , p.y ,p.vx, p.vy, myId);
 						}
-						socket.emit('update-player', p.score,p.x, p.y , p.vx , p.vy , bulletRadius,players);
+						socket.emit('update-player', p.x, p.y , p.vx , p.vy , bulletRadius);
 					}
 					else
 						if(bulletRadius>0){
 							bulletRadius-=.15;
-							socket.emit('update-player', p.score,p.x, p.y , p.vx , p.vy , bulletRadius,players);
+							socket.emit('update-player', p.x, p.y , p.vx , p.vy , bulletRadius);
 						}
 
 					if(bulletRadius>0){
@@ -171,22 +172,23 @@
       				//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
       				for (var i = bullets.length - 1; i >= 0; i--) {
-      					if(bullets[i].owner != myName){
+      					//console.log(myId + " . " + bullets[i].owner);
+      					if(bullets[i].owner != myId){
       					var bX = (mapBLCx + bullets[i].ox + halfHeight/4*3) + (d+bullets[i].dist)*(d*bullets[i].vx/halfHeight)/d;
       					var bY = (mapBLCy - bullets[i].oy - halfHeight) - (d+bullets[i].dist)*(d*bullets[i].vy/halfHeight)/d;
       					if(bX < (x0 + longestEdge + halfHeight/2) & bX > ( x0 - longestEdge - halfHeight/2) & bY > (y0 - longestEdge - halfHeight/2) & bY < (y0 + longestEdge + halfHeight/2)){
       						if(checkLine(lx,ly,x1,y1,bX,bY, Math.sqrt(Math.pow(halfHeight*2,2) + Math.pow(h,2)))){
-      							socket.emit('rem-bullet',bullets[i].id,myName);
+      							socket.emit('rem-bullet',bullets[i].id,bullets[i].owner);
       							//change html
       							break;
       						}
       						else if(checkLine(x1,y1,rx,ry,bX,bY, Math.sqrt(Math.pow(halfHeight*2,2) + Math.pow(h,2)))){
-      							socket.emit('rem-bullet',bullets[i].id,myName);
+      							socket.emit('rem-bullet',bullets[i].id,bullets[i].owner);
       							//change html
       							break;
       						}
       						else if(checkLine(rx,ry,lx,ly,bX,bY,h*2)){
-      							socket.emit('rem-bullet',bullets[i].id,myName);
+      							socket.emit('rem-bullet',bullets[i].id,bullets[i].owner);
       							//change html
       							break;
       						}
@@ -208,9 +210,7 @@
 			  		//bottomWall
 			  		context.fillRect(mapBLCx - canvas.width/2, mapBLCy, mapSide + canvas.width/2, canvas.height/2);
 
-			  		context.fillRect(mapBLCx, mapBLCy, mapSide, 100);
-			  		
-			  			var newX = 0;
+			  		var newX = 0;
 						var newY = 0;
 				  		if(going_left & p.x + halfHeight/4*3 - longestEdge >= moveConstant)
 				  			newX-=moveConstant;
@@ -221,11 +221,11 @@
 				  		if(going_down & p.y + halfHeight - longestEdge >= moveConstant)
 				  			newY-=moveConstant;
 				  		if(newX!=0 || newY!=0 ||  updatedM){
+				  			//console.log('here');
 				  			updatedM = false;
 				  			var c = Math.sqrt( Math.pow(mouseX,2) + Math.pow(mouseY,2) );
-				  			socket.emit('update-player', p.score,p.x + newX, p.y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) , bulletRadius,players);
+				  			socket.emit('update-player', p.x + newX, p.y + newY , (halfHeight * mouseX / c) , (halfHeight * mouseY / c) , bulletRadius);
 				  		}
-				  		
 			  	}
 
 			  	function drawPlayers(p){
@@ -284,13 +284,13 @@
       				b.dist+= moveConstant*2;
 
       				if((centerY - (d+b.dist)*y1/d - halfHeight/4) <= (mapBLCy-  mapSide - (halfHeight / 4)))
-      					socket.emit('rem-bullet',b.id,'');
+      					socket.emit('rem-bullet',b.id,-1);
       				else if((centerY - (d+b.dist)*y1/d + halfHeight/4) >= mapBLCy)
-      					socket.emit('rem-bullet',b.id,'');
+      					socket.emit('rem-bullet',b.id,-1);
       				else if( (centerX + (d+b.dist)*x1/d - halfHeight/4) <= mapBLCx)
-      					socket.emit('rem-bullet',b.id,'');
+      					socket.emit('rem-bullet',b.id,-1);
       				else if((centerX + (d+b.dist)*x1/d + halfHeight/4) >= (mapBLCx + mapSide + (halfHeight / 4)))
-      					socket.emit('rem-bullet',b.id,'');
+      					socket.emit('rem-bullet',b.id,-1);
 			  	}
 
 			  	function checkLine(x1 , y1 , x2 , y2 , cx , cy, distance){
@@ -304,27 +304,32 @@
 			  		return false;
 			  	}
 
+			  	function instantiatePlayer(p){
+			  		p.vx=0;
+			  		p.vy=halfHeight;
+			  	}
+
 			  	function scaleMap(){
 			  		//console.log('danger');
 			  		halfHeight = canvas.height/myScale/2;
-			  		if(mapSide != canvas.height/4*3 * Math.sqrt(Object.keys(players).length)){
-			  			mapSide = canvas.height/4*3 * Math.sqrt(Object.keys(players).length);
+			  		if(mapSide != canvas.height/4*3 * Math.sqrt(players.length)){
+			  			mapSide = canvas.height/4*3 * Math.sqrt(players.length);
 			  			longestEdge = Math.sqrt(Math.pow(halfHeight/4*3,2) + Math.pow(halfHeight,2));
-			  			for(var player in players){
-			  				var change =false;
-			  				var correctX = players[player].x;
-			  				var correctY = players[player].y;
-			  				if(players[player].x + halfHeight/4*3 + longestEdge > mapSide){
+			  			for (var i = players.length - 1; i >= 0; i--) {
+			  				var change = false;
+			  				var correctX = players[i].x;
+			  				var correctY = players[i].y;
+			  				if(players[i].x + halfHeight/4*3 + longestEdge > mapSide){
 			  					change=true;
 			  					correctX = mapSide-longestEdge-halfHeight/4*3;
 			  				}
-							if(players[player].y + halfHeight + longestEdge  > mapSide - moveConstant){
+							if(players[i].y + halfHeight + longestEdge  > mapSide - moveConstant){
 								change=true;
 								correctY = mapSide-longestEdge-halfHeight;
 							}
 							if(change)
-								socket.emit('update-player', players[player].score, correctX, correctY , players[player].vx , players[player].vy , players[player].bR,players);
-			  			}
+								socket.emit('update-player', correctX, correctY , players[i].vx , players[i].vy , players[i].bR);
+			  			};
 			  			if(mapSide<=0) mapSide = canvas.height/2;
 			  		}
 			  	}
@@ -363,33 +368,12 @@
 				var objDiv = document.getElementById("chat-box");
 				objDiv.scrollTop = objDiv.scrollHeight;
 			});
-			socket.on('new-player', function(playerName,listOfPlayers) {
-				players=listOfPlayers;
-				//DELETE THSI AFETR UPDATE LOCNAMEHSOT whate evr
-				if(myName === '')
-					myName = playerName;
-				var player = {
-					name: playerName,
-					score: 0,
-					x: 100,
-					y: 100,
-					vx:0,
-					vy:halfHeight,
-					bR:0
-				};
-				players[playerName] = player;
-				scaleMap();
+			socket.on('get-id', function(id) {
+				if(myId==-1)
+					myId=id;
 			});
-			socket.on('update-player', function(playerName,nscore,nx,ny,nvx,nvy,nbR ) {
-				players[playerName].score=nscore;
-				players[playerName].x=nx;
-				players[playerName].y=ny;
-				players[playerName].vx=nvx;
-				players[playerName].vy=nvy;
-				players[playerName].bR=nbR;
-			});
-			socket.on('rem-player', function(playerName) {
-				delete players[playerName];
+			socket.on('update-players', function(p) {
+				players=p;
 				scaleMap();
 			});
 			socket.on('new-bullet', function(originX,originY,bvX,bvY,bullID,o) {
@@ -404,21 +388,13 @@
 				};
 				bullets.push(bullet);
 			});
-			socket.on('rem-bullet',function(bullID,hitPlayer){
-				bulletsIndex = -1;
+			socket.on('rem-bullet',function(bullID){
 				for (var i = bullets.length - 1; i >= 0; i--) {
 					if(bullets[i].id == bullID){
-						bulletsIndex=i;
+						bullets.splice(i,1);
 						break;
 					}
 				};
-				if(hitPlayer!==''){
-					if(players[bullets[bulletsIndex].owner].score >= players[hitPlayer].score)
-						players[bullets[bulletsIndex].owner].score+=10;
-					else
-						players[bullets[bulletsIndex].owner].score+= Math.round(10 + players[hitPlayer].score*.5);
-				}
-				bullets.splice(bulletsIndex,1);
 			});
 		</script>
 	</body>
